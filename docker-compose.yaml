@@ -1,0 +1,36 @@
+---
+version: "3"
+
+services:
+  grocery_budgetapi-dev-postgres:
+    image: postgres
+    networks:
+      - grocery_budget-api-backend
+    ports:
+      - "5433:5432"
+    volumes:
+      - grocery_budget-api-postgres-data:/var/lib/postgresql/data
+      - ./sql/initDb.sql:/docker-entrypoint-initdb.d/initDb.sql
+    environment:
+      POSTGRES_PASSWORD: Pass2022!
+
+  grocery_budget-api-dev:
+    depends_on:
+      - grocery_budgetapi-dev-postgres
+    image: grocery_budget-api
+    networks:
+      - grocery_budget-api-backend
+    ports:
+      - "8000:8000"
+    environment:
+      grocery_budget_API_DB_USER_NAME: postgres
+      grocery_budget_API_DB_PASSWORD: Pass2022!
+      grocery_budget_API_DB_HOST: grocery_budgetapi-dev-postgres
+      grocery_budget_API_DB_PORT: 5432
+      grocery_budget_API_DB_NAME: grocery_budget_api
+
+networks:
+  grocery_budget-api-backend:
+
+volumes:
+  grocery_budget-api-postgres-data:
