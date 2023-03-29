@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import List
 
 from fastapi import status, Depends, HTTPException, UploadFile
 
@@ -33,3 +34,7 @@ def get_slip(id: int, slip_service: SlipService = Depends(SlipService), current_
         return slip_service.get_slip_by_id(id)
     except NoSlipFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
+
+@router.get('/slips', response_model=List[DisplaySlip])
+def get_slips(slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user)):
+    return slip_service.get_all_slips()
