@@ -16,6 +16,8 @@ from src.app.users.models.database import models as user_models
 import sys
 
 class SlipFactory:
+    pattern = r'\d{1,3}(?:,\d{3})*(?:\.\d+)?'
+
     def __init__(self, user_factory: UserFactory = Depends(UserFactory)):
         self.user_factory = user_factory
 
@@ -64,7 +66,17 @@ class SlipFactory:
         #get cashier name from text. It;s the string after "Cashier: "
         cashier = text.split("CASHIER: ")[1].splitlines()[0]
         #get datetime from filename. It's the date after the last _ in the filename, It's formatted as "dd.mm.yy hh:mm" and needs to be converted to datetime
-        dt = datetime.datetime.strptime(file_name.split("_")[2]+":"+file_name.split("_")[3].replace(".pdf",""), "%d.%m.%Y %H:%M")
+        try:
+            # find the line in text that only contains "-" and then read the next line which contains the datetime
+            datetime_line: str = text.splitlines()[text.splitlines().index("----------------------------------------") + 1]
+            # extract the datetime which is the last two tokens of the line if split by spaces
+            datetime_str: str = datetime_line.split(" ")[-2] + " " + datetime_line.split(" ")[-1]
+            # convert the datetime string to datetime where date is in the format dd.mm.yy and time is in the format hh:mm
+
+            dt = datetime.datetime.strptime(datetime_str, "%d.%m.%y %H:%M")
+            print(dt)
+        except:
+            dt = datetime.datetime.strptime(file_name.split("_")[2]+":"+file_name.split("_")[3].replace(".pdf",""), "%d.%m.%Y %H:%M")
 
         #read smartshopper last four digits from text. It's the 4 digits after "Smart Shopper card # ************"
         smartshopper_last_four_digits = text.split("Smart Shopper card #  ************")[1][:4]
@@ -79,12 +91,33 @@ class SlipFactory:
         # the total_vat_incl_amount is the first value in the line
         # thetotal_vat_amount is the second value in the line
         total_vat_incl_amount = text.split("VAT INCL")[2].splitlines()[0].split()[0]
-        total_vat_incl_amount= int(total_vat_incl_amount.replace(".", "").replace(",",""))
-        total_vat_amount = text.split("VAT INCL")[2].splitlines()[0].split()[1]
-        total_vat_amount = int(total_vat_amount.replace(".", "").replace(",",""))
+        # sometimes there is another VAT INCL followed by a '.' which we not interested in. in that case we need the second one.
+        # I think this happens if you redeem the smartshopper money in the purchase
+        try:
+            if total_vat_incl_amount == ".":
+                # find the line with "VAT VAL" and read the next line
+                vat_line: str = text.splitlines()[text.splitlines().index("       VAL  VAT VAL DISC VAT VAL VAT VAL") + 1].strip()
+                # there are 4 values in the line, the first one is the total_vat_incl_amount
+                total_vat_incl_amount = int(vat_line.split(" ")[0].strip().replace(".", "").replace(",",""))
+                # extract 4 amounts from vat_line
+                matches = re.findall(self.pattern, vat_line)
+                total_vat_amount_str = matches[1].strip()
+                total_vat_amount = int(total_vat_amount_str.replace(".", "").replace(",", ""))
+                zero_amount_line: str = text.splitlines()[text.splitlines().index("       VAL  VAT VAL DISC VAT VAL VAT VAL") + 2].strip()
+                zero_matches = re.findall(self.pattern, zero_amount_line)
+                total_zerorated_amount_str = zero_matches[0].strip().replace(".", "").replace(",", "")
+                total_zerorated_amount = int(total_zerorated_amount_str)
+            else:
+                total_vat_incl_amount= int(total_vat_incl_amount.replace(".", "").replace(",",""))
+                total_vat_amount_str = text.split("VAT INCL")[2].splitlines()[0].split()[1]
+                total_vat_amount = int(total_vat_amount_str.replace(".", "").replace(",",""))
+                total_zerorated_amount_str = text.split("# ZERO-RATED ")[1].splitlines()[0].split()[0]
+                total_zerorated_amount = int(total_zerorated_amount_str.replace(".", "").replace(",", ""))
+        except:
+            total_vat_incl_amount = 0
+            total_vat_amount = 0
 
-        total_zerorated_amount = text.split("# ZERO-RATED ")[1].splitlines()[0].split()[0]
-        total_zerorated_amount = int(total_zerorated_amount.replace(".", "").replace(",",""))
+
 
         total_vitality_amount = SlipFactory.getTotalVitalityAmountInFile(text)
         slip = Slip(

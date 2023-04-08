@@ -34,27 +34,27 @@ class SlipService:
         if slip_entity is None:
             raise NoSlipFoundException("No slip found with id: " + str(slip_id))
 
-        return self.slip_factory.create_slip_from_slip_entity(slip_entity)
+        return self.slip_factory.create_slip_from_slip_entity(slip_entity, slip_entity.line_items, slip_entity.user)
 
     def get_slip_by_unique_id(self, unique_id: str) -> DisplaySlip:
         slip_entity = self.slip_dao.get_slip_by_unique_id(unique_id)
-        return self.slip_factory.create_slip_from_slip_entity(slip_entity)
+        return self.slip_factory.create_slip_from_slip_entity(slip_entity, slip_entity.line_items, slip_entity.user)
 
     def get_slips_by_user_id(self, user_id: int,  params: Params = Params(page=1, size=100)) -> Page[DisplaySlip]:
         slips_response = []
         slips_page = self.slip_dao.get_slips_by_user_id(user_id, params)
         for slip_entity in slips_page.items:
-            slips_response.append(self.slip_factory.create_slip_from_slip_entity(slip_entity))
+            slips_response.append(self.slip_factory.create_slip_from_slip_entity(slip_entity, slip_entity.line_items, slip_entity.user))
 
-        return Page.create(items=slips_response, size=slips_page.size, total=slips_page.total)
+        return Page.create(items=slips_response, params=params, total=slips_page.total)
 
     def get_all_slips(self, params: Params = Params(page=1, size=100)) -> Page[DisplaySlip]:
         slips_response = []
         slips_page = self.slip_dao.get_all_slips(params)
         for slip_entity in slips_page.items:
-            slips_response.append(self.slip_factory.create_slip_from_slip_entity(slip_entity))
+            slips_response.append(self.slip_factory.create_slip_from_slip_entity(slip_entity, slip_entity.line_items, slip_entity.user))
 
-        return Page.create(items=slips_response, size=slips_page.size, total=slips_page.total)
+        return Page.create(items=slips_response, params=params, total=slips_page.total)
 
 
     def create_slip_from_file(self, file_stream: BytesIO, file_name: str, user: User) -> DisplaySlip:

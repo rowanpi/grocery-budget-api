@@ -2,6 +2,7 @@ from io import BytesIO
 from typing import List
 
 from fastapi import status, Depends, HTTPException, UploadFile
+from fastapi_pagination import Page, Params
 
 from ..models.slip import DisplaySlip, Slip
 from ...services.slipService import SlipService, NoSlipFoundException
@@ -29,12 +30,20 @@ async def create_slip(file: UploadFile,
 
 #add endpoint to get a slip by id
 @router.get('/slips/{id}', response_model=DisplaySlip)
-def get_slip(id: int, slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user)):
+def get_slip(id: int, slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user), user_service: UserService = Depends(UserService)):
     try:
-        return slip_service.get_slip_by_id(id)
+        user = user_service.get_user_by_name(current_user.username)
+        slip: DisplaySlip = slip_service.get_slip_by_id(id)
+        if slip is not None:
+            if slip.user.id == user.id:
+                return slip
+            else:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized to view this slip")
+        return slip_service.get_slip_by_id(id, user)
     except NoSlipFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.detail)
 
-@router.get('/slips', response_model=List[DisplaySlip])
-def get_slips(slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user)):
-    return slip_service.get_all_slips()
+@router.get('/slips', response_model=Page[DisplaySlip])
+def get_slips(page: int = 1, page_size:int = 10, slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user), user_service: UserService = Depends(UserService)):
+    params: Params = Params(page=page, size=page_size)
+    return slip_service.get_slips_by_user_id(user_service.get_user_by_name(current_user.username).id, params)
