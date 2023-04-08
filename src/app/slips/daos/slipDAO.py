@@ -2,6 +2,7 @@ from fastapi import Depends
 
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page, Params
+from sqlalchemy import extract
 
 from src.app.database import get_db, SessionLocal
 from src.app.slips.models.database import models
@@ -61,4 +62,8 @@ class SlipDAO:
     def delete_line_items(self, slip: models.Slip):
         #delete all line items relating to this slip
         self.db.query(models.LineItem).filter(models.LineItem.slip_id == slip.id).delete()
+
+    def get_slips_by_month(self, month, year, user_id, params):
+        return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id).filter((extract('year', models.Slip.datetime) == year),
+                        extract('month', models.Slip.datetime) == month), params)
 

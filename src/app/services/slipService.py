@@ -85,3 +85,11 @@ class SlipService:
 
         return self.slip_factory.create_slip_from_slip_entity(slip_entity)
 
+    def get_slips_by_month(self, month, year, user_id, params):
+        slips_response = []
+        slips_page = self.slip_dao.get_slips_by_month(month, year, user_id, params)
+        for slip_entity in slips_page.items:
+            slips_response.append(self.slip_factory.create_slip_from_slip_entity(slip_entity, slip_entity.line_items, slip_entity.user))
+
+        return Page.create(items=slips_response, params=params, total=slips_page.total)
+
