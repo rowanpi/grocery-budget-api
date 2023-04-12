@@ -22,7 +22,9 @@ class SlipDAO:
         return self.db.query(models.Slip).filter(models.Slip.unique_id == unique_id).first()
 
     def get_slips_by_user_id(self, user_id: int, params: Params = Params(page=1, size=100)) -> Page[models.Slip]:
-        return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id), params)
+        #sort by datetime descending
+        return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id).order_by(models.Slip.datetime.desc()), params)
+
 
     def create_slip(self, slip: models.Slip) -> models.Slip:
         self.db.add(slip)
