@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     grocery_budget_app_port = 8000
     grocery_budget_secret_key: str = "secret_key"
     grocery_budget_token_expiry_minutes: int = 20
+    grocery_budget_refresh_token_expiry_minutes: int = 60 * 24 * 31
     grocery_budget_image_store: str = "local" # local or s3 (aws)
     grocery_budget_image_base_path: str = "./images"
 

@@ -21,6 +21,20 @@ def login(request: OAuth2PasswordRequestForm = Depends(), auth_service: AuthServ
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid username or password",
                             headers={'WWW-Authenticate': "Bearer"})
 
+#add refresh endpoint
+@router.post("/refresh", response_model=AuthResponse)
+def refresh_token(token:str, auth_service: AuthService = Depends(AuthService)):
+    try:
+        return auth_service.refresh_token(token)
+    except InvalidAuthCredentials as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid auth credentials",
+                            headers={'WWW-Authenticate': "Bearer"})
+    except NoUserException as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid username or password",
+                            headers={'WWW-Authenticate': "Bearer"})
+
+
+
 @router.post("/login_with_google_token", response_model=AuthResponse)
 async def verify_google_token(token: str, auth_service: AuthService = Depends(AuthService)):
     try:

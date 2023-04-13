@@ -11,7 +11,14 @@ class TokenUtil:
     def generate_token(self, data: dict):
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(minutes = settings.grocery_budget_token_expiry_minutes)
-        to_encode.update({"exp":expire})
+        to_encode.update({"exp":expire, "type": "access"})
+        encoded_jwt = jwt.encode(to_encode, settings.grocery_budget_secret_key, ALGORITHM)
+        return encoded_jwt
+
+    def generate_refresh_token(self, data: dict):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(minutes = settings.grocery_budget_refresh_token_expiry_minutes)
+        to_encode.update({"exp": expire, "type": "refresh"})
         encoded_jwt = jwt.encode(to_encode, settings.grocery_budget_secret_key, ALGORITHM)
         return encoded_jwt
 

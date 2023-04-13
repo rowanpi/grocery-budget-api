@@ -36,5 +36,6 @@ class TokenData(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str
     user: DisplayUser

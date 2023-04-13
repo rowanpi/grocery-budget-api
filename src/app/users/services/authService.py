@@ -37,12 +37,31 @@ class AuthService:
             data={"sub": user.email}
         )
 
+        refresh_token = self.token_util.generate_refresh_token(
+            data={"sub": user.email}
+        )
 
         return AuthResponse(
             access_token=access_token,
+            refresh_token=refresh_token,
             token_type="bearer",
             user=self.user_factory.create_display_user_from_user_entity(user)
         )
+
+    def refresh_token(self, token):
+        try:
+            decoded_token = self.token_util.decode_token(token)
+            user_name: str = decoded_token.get('sub')
+            if user_name is None:
+                raise InvalidAuthCredentials("Invalid Auth")
+            type = decoded_token.get('type')
+            if type != 'refresh':
+                raise InvalidAuthCredentials("Invalid Token Type")
+            return self.login(user_name)
+        except Exception as e:
+            print(e)
+            raise InvalidAuthCredentials("Invalid Auth")
+
 
     def login(self, username) -> AuthResponse:
         # this gets user by name or email address
