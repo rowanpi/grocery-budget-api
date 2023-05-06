@@ -9,15 +9,16 @@ from src.app.media.daos.mediaDAO import MediaDAO
 import os.path
 
 from src.app.media.factories.mediaFactory import MediaFactory
-from src.app.media.models.media import CreateImage
+from src.app.media.models.database import models
+from src.app.media.models.media import CreateMediaItem
 from src.app.utils.s3Utils import S3Utils
 
 
-class UnsupportedImageStoreException(Exception):
+class UnsupportedMediaItemStoreException(Exception):
     pass
 
 
-class NoImageException(Exception):
+class NoMediaItemException(Exception):
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
@@ -36,50 +37,50 @@ class MediaService:
                                access_key = settings.grocery_budget_s3_access_key,
                                secret_access_key = settings.grocery_budget_s3_secret_access_key)
 
-    def get_image_by_id(self, id):
-        image = self.media_DAO.get_image_by_id(id)
-        if image is None:
-            raise NoImageException("No image with that ID")
-        if image.store == 'local':
-            if not os.path.isfile(image.address):
-                raise NoImageException(f"No image the filename stored for the provided ID: {id}")
-            return FileResponse(image.address)
-        elif image.store == 's3':
-            if(image is None):
-                raise NoImageException(f"No image with the filename stored for the provided ID: {id}")
+    def get_media_item_by_id(self, id):
+        media_item = self.media_DAO.get_media_item_by_id(id)
+        if media_item is None:
+            raise NoMediaItemException("No media item with that ID")
+        if media_item.store == 'local':
+            if not os.path.isfile(media_item.address):
+                raise NoMediaItemException(f"No media item the filename stored for the provided ID: {id}")
+            return FileResponse(media_item.address, media_type=media_item.content_type, filename=media_item.filename)
+        elif media_item.store == 's3':
+            if(media_item is None):
+                raise NoMediaItemException(f"No media item with the filename stored for the provided ID: {id}")
             #return StreamingResponse
-            obj = self.s3Utils.get_file(image.filename)
-            return StreamingResponse(obj['Body'], media_type=image.content_type)
+            obj = self.s3Utils.get_file(media_item.filename)
+            return StreamingResponse(obj['Body'], media_type=media_item.content_type)
         else:
-            raise NotImplementedError("Image store not implemented")
+            raise NotImplementedError("Media Item store not implemented")
 
-    def upload_image(self, file, filename, description=None):
-        print("got in upload_image methopd")
-        if settings.grocery_budget_image_store == 'local':
-            os.makedirs(os.path.dirname(settings.grocery_budget_image_base_path), exist_ok=True)
+    def upload_media_item(self, file, filename, description=None) -> models.MediaItem:
+        if settings.grocery_budget_media_item_store == 'local':
+            os.makedirs(os.path.dirname(settings.grocery_budget_media_item_base_path), exist_ok=True)
+            # TODO this is a bit of hack to make sure the extension is .jpg and not .jpeg
             if file.content_type == 'image/jpeg':
-                file.content_type = 'image/jpg'  # TODO this is a bit of hack to make sure the extension is .jpg and not .jpe
+                file.content_type = 'image/jpg'
 
-            if not settings.grocery_budget_image_base_path.endswith('/'):
-                settings.grocery_budget_image_base_path += '/'
+            if not settings.grocery_budget_media_item_base_path.endswith('/'):
+                settings.grocery_budget_media_item_base_path += '/'
 
-            file_path = settings.grocery_budget_image_base_path + filename
+            file_path = settings.grocery_budget_media_item_base_path + filename
             with open(file_path, 'wb') as f:
                 f.write(file.file.read())
-            image = CreateImage(
-                store=settings.grocery_budget_image_store,
+
+            media_item = CreateMediaItem(
+                store=settings.grocery_budget_media_item_store,
                 address=file_path,
                 created=datetime.now(),
                 filename=filename,
                 description=description,
-                content_type=file.content_type
-            )
-        elif settings.grocery_budget_image_store == 's3':
-            print("got in upload_image s3 methopd")
+                content_type=file.content_type)
+
+        elif settings.grocery_budget_media_item_store == 's3':
 
             if self.s3Utils.upload_file(file.file, filename):
-                image = CreateImage(
-                    store=settings.grocery_budget_image_store,
+                media_item = CreateMediaItem(
+                    store=settings.grocery_budget_media_item_store,
                     address="s3://"+settings.grocery_budget_s3_bucket_name+"/"+filename,
                     created=datetime.now(),
                     filename=filename,
@@ -90,13 +91,13 @@ class MediaService:
                 raise Exception("File upload failed")
 
         else:
-            raise UnsupportedImageStoreException("Unsupported image store: " + settings.grocery_budget_image_store)
+            raise UnsupportedMediaItemStoreException("Unsupported media item store: " + settings.grocery_budget_media_item_store)
 
-        image_entity = self.media_factory.create_image_entity_from_image(image)
-        image_entity = self.media_DAO.add_image(image_entity)
-        return image_entity
+        media_item_entity = self.media_factory.create_media_item_entity_from_media_item(media_item)
+        media_item_entity = self.media_DAO.add_media_item(media_item_entity)
+        return media_item_entity
 
-    # create image is intended to be called by the media routers as it returns the image model, not the entity. Upload
-    # image returns the entity and is to be called by another service
-    def create_image(self, file, filename, description=None):
-        return self.media_factory.create_image_from_image_entity(self.upload_image(file, filename, description))
+    # create media item is intended to be called by the media routers as it returns the media item model, not the entity. Upload
+    # media item returns the entity and is to be called by another service
+    def create_media_item(self, file, filename, description=None):
+        return self.media_factory.create_media_item_from_media_item_entity(self.upload_media_item(file, filename, description))

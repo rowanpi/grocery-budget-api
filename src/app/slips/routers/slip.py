@@ -1,11 +1,8 @@
-from io import BytesIO
-from typing import List
-
 from fastapi import status, Depends, HTTPException, UploadFile
 from fastapi_pagination import Page, Params
 
-from ..models.slip import DisplaySlip, Slip
-from ...services.slipService import SlipService, NoSlipFoundException
+from ..models.slip import DisplaySlip
+from src.app.slips.services.slipService import SlipService, NoSlipFoundException
 from ...users.models.user import User
 from fastapi import APIRouter
 
@@ -20,12 +17,8 @@ async def create_slip(file: UploadFile,
                 current_user: User = Depends(get_current_user),
                 user_service: UserService = Depends(UserService)):
 
-    file_contents = await file.read()
+    return await slip_service.create_slip_from_file(file=file, file_name=file.filename, user=user_service.get_user_by_name(current_user.username))
 
-    # Create a stream from the file contents
-    file_stream: BytesIO = BytesIO(file_contents)
-    return slip_service.create_slip_from_file(file_stream=file_stream, file_name=file.filename, user=user_service.get_user_by_name(current_user.username)
-)
 
 
 @router.get('/slips/bymonth', response_model=Page[DisplaySlip])

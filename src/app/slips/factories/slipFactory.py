@@ -6,6 +6,7 @@ from typing import List
 
 from fastapi import Depends
 
+from src.app.media.models.media import ViewMediaItem
 from src.app.slips.models.database.models import LineItem
 from src.app.users.factories.userFactory import UserFactory
 from src.app.slips.models.slip import Slip, DisplaySlip, DisplayLineItem
@@ -21,7 +22,7 @@ class SlipFactory:
     def __init__(self, user_factory: UserFactory = Depends(UserFactory)):
         self.user_factory = user_factory
 
-    def create_slip_from_slip_entity(self, slip_entity: models.Slip, line_items: List[DisplayLineItem], user) -> DisplaySlip:
+    def create_slip_from_slip_entity(self, slip_entity: models.Slip, line_items: List[DisplayLineItem], user, media_item: ViewMediaItem) -> DisplaySlip:
         slip_response = DisplaySlip(
             id=slip_entity.id,
             unique_id=slip_entity.unique_id,
@@ -36,7 +37,8 @@ class SlipFactory:
             total_zerorated_amount=slip_entity.total_zerorated_amount,
             total_vitality_amount=slip_entity.total_vitality_amount,
             user=user,
-            line_items=line_items
+            line_items=line_items,
+            media_item=media_item
         )
         return slip_response
 
@@ -45,6 +47,7 @@ class SlipFactory:
             id=slip.id,
             unique_id=slip.unique_id,
             user_id=slip.user_id,
+            media_item_id=slip.media_item_id,
             outlet=slip.outlet,
             cashier=slip.cashier,
             datetime=slip.datetime,
@@ -178,7 +181,8 @@ class SlipFactory:
             less_discount=li_entity.less_discount,
             smartshopper_instant_savings=li_entity.smartshopper_instant_savings,
             is_zero_rated=li_entity.is_zero_rated,
-            is_vitality=li_entity.is_vitality
+            is_vitality=li_entity.is_vitality,
+            final_price=li_entity.total_price - li_entity.less_discount - li_entity.smartshopper_instant_savings
         )
         return display_line_item
 

@@ -47,6 +47,7 @@ class SlipDAO:
         existing_slip.total_zerorated_amount = slip.total_zerorated_amount
         existing_slip.total_vitality_amount = slip.total_vitality_amount
         existing_slip.user_id = slip.user_id
+        existing_slip.media_item_id = slip.media_item_id
         self.db.commit()
         self.db.refresh(existing_slip)
         return existing_slip

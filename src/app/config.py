@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     grocery_budget_secret_key: str = "secret_key"
     grocery_budget_token_expiry_minutes: int = 20
     grocery_budget_refresh_token_expiry_minutes: int = 60 * 24 * 31
-    grocery_budget_image_store: str = "local" # local or s3 (aws)
-    grocery_budget_image_base_path: str = "./images"
+    grocery_budget_media_item_store: str = "local" # local or s3 (aws)
+    grocery_budget_media_item_base_path: str = "./media_items"
 
     grocery_budget_cors_origins: Set[str] = set()
     grocery_budget_cors_origins.add("http://localhost:3000")

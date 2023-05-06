@@ -7,6 +7,7 @@ class Slip(Base):
     __tablename__ = 'slips'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
+    media_item_id = Column(Integer, ForeignKey('media_items.id'))
     unique_id = Column(String)
     outlet = Column(String)
     cashier = Column(String)
@@ -19,6 +20,7 @@ class Slip(Base):
     total_zerorated_amount = Column(Integer)
     total_vitality_amount = Column(Integer)
     line_items = relationship("LineItem", backref="slip")
+    media_item = relationship("MediaItem")
     __table_args__ = (UniqueConstraint('unique_id', name='unique_id_uc'), {'extend_existing': True})
 
 class LineItem(Base):

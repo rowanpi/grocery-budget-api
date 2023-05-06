@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field, BaseConfig
 import datetime
 
+from src.app.media.models.database.models import MediaItem
+from src.app.media.models.media import ViewMediaItem
 from src.app.users.models.user import DisplayUser
 
 BaseConfig.arbitrary_types_allowed = True
@@ -8,6 +10,7 @@ BaseConfig.arbitrary_types_allowed = True
 class Slip(BaseModel):
     id: int = Field(None)
     user_id: int = Field(None)
+    media_item_id: int = Field(None)
     unique_id: str = Field(None)
     outlet: str = Field(None)
     cashier: str = Field(None)
@@ -52,6 +55,7 @@ class DisplaySlip(BaseModel):
     total_vat_amount: int = Field(None)
     total_zerorated_amount: int = Field(None)
     total_vitality_amount: int = Field(None)
+    media_item: ViewMediaItem = Field(None)
     user: DisplayUser = Field(None)
     line_items: list = Field(None)
     class Config:
@@ -90,6 +94,7 @@ class DisplayLineItem(BaseModel):
     smartshopper_instant_savings: int = Field(None)
     is_zero_rated: bool = Field(None)
     is_vitality: bool = Field(None)
+    final_price: int = Field(None)
     class Config:
         schema_extra = {
             "example": {
@@ -99,10 +104,11 @@ class DisplayLineItem(BaseModel):
                 "description": "Bread",
                 "price": 10000, # 100.00
                 "total_price": 10000, # 100.00
-                "less_discount": 0, # 0.00
+                "less_discount": 1000, # 0.00
                 "smartshopper_instant_savings": 0, # 0.00
                 "is_zero_rated": False,
-                "is_vitality": False
+                "is_vitality": False,
+                "final_price": 9900
             }
         }
 
