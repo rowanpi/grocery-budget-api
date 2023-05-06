@@ -19,10 +19,9 @@ router = APIRouter(tags=['Media'])
 def get_media_item_by_id(id: int, media_service: MediaService = Depends(MediaService),
                     current_user: User = Depends(get_current_user)):
     try:
-        media_item:FileResponse = media_service.get_media_item_by_id(id)
+        media_item = media_service.get_media_item_by_id(id)
         if media_item is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No media_item with that ID")
-        media_item.headers['Content-Disposition'] = f'attachment; filename="{media_item.filename}"'
         return media_item
     except NoMediaItemException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.get_message())

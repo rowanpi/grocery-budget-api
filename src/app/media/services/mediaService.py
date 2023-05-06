@@ -1,3 +1,4 @@
+import io
 from datetime import datetime
 
 from fastapi import Depends
@@ -44,17 +45,36 @@ class MediaService:
         if media_item.store == 'local':
             if not os.path.isfile(media_item.address):
                 raise NoMediaItemException(f"No media item the filename stored for the provided ID: {id}")
-            return FileResponse(media_item.address, media_type=media_item.content_type, filename=media_item.filename)
+            file_rsp = FileResponse(media_item.address, media_type=media_item.content_type, filename=media_item.filename)
+            file_rsp.headers['Content-Disposition'] = f'attachment; filename="{media_item.filename}"'
+            return file_rsp
         elif media_item.store == 's3':
             if(media_item is None):
                 raise NoMediaItemException(f"No media item with the filename stored for the provided ID: {id}")
             #return StreamingResponse
             obj = self.s3Utils.get_file(media_item.filename)
-            return StreamingResponse(obj['Body'], media_type=media_item.content_type)
+            #response = FileResponse(None, filename=media_item.filename, media_type=media_item.content_type, content_disposition_type="attachment")
+            #file_obj = io.BytesIO(obj['Body'].read())
+
+            # Get the content type of the object
+            content_type = media_item.content_type
+
+            # Set the Content-Disposition header to force download with the original filename
+            if 'Key' in obj:
+                filename = obj['Key']
+            else:
+                filename = media_item.filename
+
+            headers = {
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+            streaming_rsp = StreamingResponse(obj['Body'].iter_chunks(), media_type=content_type, headers=headers)
+            return streaming_rsp
         else:
             raise NotImplementedError("Media Item store not implemented")
 
     def upload_media_item(self, file, filename, description=None) -> models.MediaItem:
+        file.file.seek(0)
         if settings.grocery_budget_media_item_store == 'local':
             os.makedirs(os.path.dirname(settings.grocery_budget_media_item_base_path), exist_ok=True)
             # TODO this is a bit of hack to make sure the extension is .jpg and not .jpeg
@@ -77,7 +97,6 @@ class MediaService:
                 content_type=file.content_type)
 
         elif settings.grocery_budget_media_item_store == 's3':
-
             if self.s3Utils.upload_file(file.file, filename):
                 media_item = CreateMediaItem(
                     store=settings.grocery_budget_media_item_store,

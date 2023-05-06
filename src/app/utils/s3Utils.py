@@ -14,6 +14,7 @@ class S3Utils:
 
     def upload_file(self, file, object_name=None):
         try:
+            file.seek(0)
             response = self.s3.meta.client.upload_fileobj (file, self.bucket_name, object_name)
         except ClientError as e:
             logging.error(e)
