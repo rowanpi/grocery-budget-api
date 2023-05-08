@@ -1,5 +1,6 @@
 import io
 import os
+from datetime import date
 from zipfile import ZipFile
 
 from fastapi import status, Depends, HTTPException, UploadFile
@@ -29,6 +30,11 @@ async def create_slip(file: UploadFile,
 def get_slips_by_month(month: int, year: int, page: int = 1, page_size: int = 10, slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user), user_service: UserService = Depends(UserService)):
     params: Params = Params(page=page, size=page_size)
     return slip_service.get_slips_by_month(month, year, user_service.get_user_by_name(current_user.username).id, params)
+
+@router.get('/slips/bydaterange', response_model=Page[DisplaySlip])
+def get_slips_by_daterange(start_date: date, end_date: date, page: int = 1, page_size: int = 10, slip_service: SlipService = Depends(SlipService), current_user: User = Depends(get_current_user), user_service: UserService = Depends(UserService)):
+    params: Params = Params(page=page, size=page_size)
+    return slip_service.get_slips_by_daterange(start_date, end_date, user_service.get_user_by_name(current_user.username).id, params)
 
 
 #add endpoint to get a slip by id

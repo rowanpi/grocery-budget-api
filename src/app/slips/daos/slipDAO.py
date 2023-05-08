@@ -70,3 +70,8 @@ class SlipDAO:
         return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id).filter((extract('year', models.Slip.datetime) == year),
                         extract('month', models.Slip.datetime) == month), params)
 
+    def get_slips_by_daterange(self, start_date, end_date, user_id, params):
+        return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id).filter(
+            (models.Slip.datetime >= start_date),
+            (models.Slip.datetime <= end_date)), params)
+

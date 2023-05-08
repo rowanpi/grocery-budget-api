@@ -19,9 +19,9 @@ class Settings(BaseSettings):
     grocery_budget_cors_origins.add("http://localhost:3000")
 
 
-    grocery_budget_s3_bucket_name = "grocery_budgetapp-s3"
+    grocery_budget_s3_bucket_name = "grocerybudget"
     grocery_budget_s3_region_name = "eu-west-1"
-    grocery_budget_s3_access_key = "" 
+    grocery_budget_s3_access_key = ""
     grocery_budget_s3_secret_access_key = ""
 
     grocery_budget_google_client_id = "1026317288648-ig69iuhplrskjvuqtov66qu4bihlk27g.apps.googleusercontent.com"

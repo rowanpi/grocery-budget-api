@@ -135,3 +135,19 @@ class SlipService:
 
         return Page.create(items=slips_response, params=params, total=slips_page.total)
 
+    def get_slips_by_daterange(self, start_date, end_date, user_id, params):
+        slips_response = []
+        slips_page = self.slip_dao.get_slips_by_daterange(start_date, end_date, user_id, params)
+        for slip_entity in slips_page.items:
+            view_media_item = None
+            if slip_entity.media_item is not None:
+                view_media_item = self.media_factory.create_media_item_from_media_item_entity(slip_entity.media_item)
+            # convert slip_entity.line_items to list of DisplayLineItems
+            display_line_items = [self.slip_factory.create_line_item_from_line_item_entity(line_item) for line_item in
+                                  slip_entity.line_items]
+            slips_response.append(
+                self.slip_factory.create_slip_from_slip_entity(slip_entity, display_line_items, slip_entity.user,
+                                                               view_media_item))
+
+        return Page.create(items=slips_response, params=params, total=slips_page.total)
+
