@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import List
 
 import PyPDF2
 from fastapi import Depends, UploadFile
@@ -10,7 +11,7 @@ from src.app.media.models.database import models as media_models
 from src.app.slips.services.slipParser import SlipParser
 from src.app.slips.daos.slipDAO import SlipDAO
 from src.app.slips.factories.slipFactory import SlipFactory
-from src.app.slips.models.slip import DisplaySlip, Slip
+from src.app.slips.models.slip import DisplaySlip, Slip, DisplayLineItem
 from src.app.users.factories.userFactory import UserFactory
 from fastapi_pagination import Page, Params
 
@@ -111,9 +112,20 @@ class SlipService:
 
         line_items = self.slip_parser.parse_slip_text_to_obtain_line_items(text, slip_entity)
         li_entities = self.slip_dao.create_line_items(line_items)
-        li_models = self.slip_factory.create_line_items_from_line_item_entities(li_entities)
+        li_models: List[DisplayLineItem] = self.slip_factory.create_line_items_from_line_item_entities(li_entities)
+        total_vitality_amount = self.getTotalVitalityAmountInFile(li_models)
+        slip_entity.total_vitality_amount = total_vitality_amount
+        slip_entity = self.slip_dao.update_slip(slip_entity.id, slip_entity)
         view_media_item = self.media_factory.create_media_item_from_media_item_entity(media_item)
         return self.slip_factory.create_slip_from_slip_entity(slip_entity, li_models, user, view_media_item)
+
+
+    def getTotalVitalityAmountInFile(self, items: List[DisplayLineItem]):
+        vitality_amount = 0
+        for item in items:
+            if item.is_vitality is True:
+                vitality_amount += item.final_price
+        return vitality_amount
 
     def create_slip(self, slip: Slip) -> DisplaySlip:
         slip_entity = self.slip_factory.create_slip_entity_from_slip(slip)

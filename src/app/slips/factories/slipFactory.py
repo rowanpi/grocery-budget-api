@@ -120,9 +120,7 @@ class SlipFactory:
             total_vat_incl_amount = 0
             total_vat_amount = 0
 
-
-
-        total_vitality_amount = SlipFactory.getTotalVitalityAmountInFile(text)
+        total_vitality_amount = 0
         slip = Slip(
             unique_id=unique_id,
             user_id=user.id,
@@ -138,30 +136,6 @@ class SlipFactory:
             total_vitality_amount=total_vitality_amount
         )
         return slip
-
-    @staticmethod
-    def find_vitality_amounts(text: str):
-        # create a regex pattern
-        pattern = r"\d+\.\d\dV|\d+\.\d\d#V"
-        # create a regex object
-        regex = re.compile(pattern)
-        # find all matches
-        matches = regex.findall(text)
-        # return matches
-        return matches
-
-    @staticmethod
-    def getTotalVitalityAmountInFile(text: str):
-        vitality_amounts = SlipFactory.find_vitality_amounts(text)
-        total_vitality_amount = 0;
-        for amount in vitality_amounts:
-            # strip non numeric endings from amount including a possible hash
-            amount = amount[:-1]
-            if amount[-1] == "#":
-                amount = amount[:-1]
-            total_vitality_amount += int(amount.replace(".","").replace(",",""))
-        print(total_vitality_amount)
-        return int(total_vitality_amount)
 
     def create_line_items_from_line_item_entities(self, li_entities) -> List[DisplayLineItem]:
         line_items = []
