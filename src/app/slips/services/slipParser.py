@@ -96,6 +96,8 @@ class SlipParser:
 
                 lineItems.append(line_item)
                 line_number = line_number + 1
+            elif "BONUS POINTS" in lines[line_number].strip():
+                line_number = line_number + 1 #skip line
             else: #line doesnt have a numeric value because more than 1 item was bought and the details are in the second line
                 description = lines[line_number].strip()
                 line_number = line_number + 1
