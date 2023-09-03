@@ -7,7 +7,7 @@ class Slip(Base):
     __tablename__ = 'slips'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    media_item_id = Column(Integer, ForeignKey('media_items.id'))
+    media_item_id = Column(Integer, ForeignKey('groc_media_items.id'))
     unique_id = Column(String)
     outlet = Column(String)
     cashier = Column(String)
