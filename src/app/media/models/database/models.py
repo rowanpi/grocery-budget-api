@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from src.app.database import Base
 
 class MediaItem(Base):
-    __tablename__ = 'media_items'
+    __tablename__ = 'groc_media_items'
     id = Column(Integer, primary_key=True, index=True)
     created = Column(DateTime, nullable=False)
     store = Column(String, nullable=False)
