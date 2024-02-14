@@ -3,7 +3,7 @@ from typing import Set
 
 class Settings(BaseSettings):
     grocery_budget_api_db_user_name: str = "postgres"
-    grocery_budget_api_db_password: str = ""
+    grocery_budget_api_db_password: str = "password"
     grocery_budget_api_db_name: str = "grocery_budget"
     grocery_budget_api_db_port = 5432
     grocery_budget_api_db_host = "localhost"

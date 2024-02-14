@@ -2,7 +2,7 @@ from fastapi import Depends
 
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page, Params
-from sqlalchemy import extract
+from sqlalchemy import extract, cast, Date
 
 from src.app.database import get_db, SessionLocal
 from src.app.slips.models.database import models
@@ -71,7 +71,7 @@ class SlipDAO:
                         extract('month', models.Slip.datetime) == month).order_by(models.Slip.datetime.desc()), params)
 
     def get_slips_by_daterange(self, start_date, end_date, user_id, params):
+        #ignore time portion
         return paginate(self.db.query(models.Slip).filter(models.Slip.user_id == user_id).filter(
-            (models.Slip.datetime >= start_date),
-            (models.Slip.datetime <= end_date)).order_by(models.Slip.datetime.desc()), params)
-
+            (cast(models.Slip.datetime,Date) >= start_date),
+            (cast(models.Slip.datetime,Date) <= end_date)).order_by(models.Slip.datetime.desc()), params)

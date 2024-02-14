@@ -1,3 +1,4 @@
+from datetime import date
 from io import BytesIO
 from typing import List
 
@@ -147,8 +148,9 @@ class SlipService:
 
         return Page.create(items=slips_response, params=params, total=slips_page.total)
 
-    def get_slips_by_daterange(self, start_date, end_date, user_id, params):
+    def get_slips_by_daterange(self, start_date:date, end_date:date, user_id, params):
         slips_response = []
+        #set start_date time portion to 0:00 and set end_date time portion to 23:59
         slips_page = self.slip_dao.get_slips_by_daterange(start_date, end_date, user_id, params)
         for slip_entity in slips_page.items:
             view_media_item = None
@@ -162,4 +164,3 @@ class SlipService:
                                                                view_media_item))
 
         return Page.create(items=slips_response, params=params, total=slips_page.total)
-
